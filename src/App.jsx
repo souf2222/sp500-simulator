@@ -110,6 +110,8 @@ const generateSP500 = (years = 25) => {
 const simulateStrategy = (allStocks, sp500Data, buyRank, sellRank, useRankChange = false, rankChangeFrom = 4, rankChangeTo = 3, minHoldDays = 5, useMomentum = true, momentumDays = 20, stopLossPct = 0.15, takeProfitPct = 0.25) => {
   if (!allStocks || allStocks.length === 0) return null;
 
+  console.log('Simulating with', allStocks.length, 'stocks');
+  
   const results = [];
   const trades = [];
   const initialCapital = 10000;
@@ -125,8 +127,12 @@ const simulateStrategy = (allStocks, sp500Data, buyRank, sellRank, useRankChange
 
   const allDates = [...new Set(allStocks.flatMap(s => s.data.map(d => d.date)))].sort();
   
+  console.log('Total dates:', allDates.length, 'First:', allDates[0], 'Last:', allDates[allDates.length-1]);
+  
   const warmUpDays = 30;
   const validDates = allDates.slice(Math.max(warmUpDays, Math.floor(allDates.length * 0.05)), allDates.length);
+  
+  console.log('Valid trading dates:', validDates.length);
 
   const getStockDataAtDate = (ticker, date) => {
     const stock = allStocks.find(s => s.ticker === ticker);
@@ -198,6 +204,11 @@ const simulateStrategy = (allStocks, sp500Data, buyRank, sellRank, useRankChange
     const prevRanks = {};
     prevSorted.forEach((s, idx) => { prevRanks[s.ticker] = idx + 1; });
 
+    if (i === 0) {
+      console.log('First day ranks:', currentRanks);
+      console.log('buyRank:', buyRank);
+    }
+
     let shouldBuy = false;
     let buyTicker = '';
 
@@ -208,17 +219,21 @@ const simulateStrategy = (allStocks, sp500Data, buyRank, sellRank, useRankChange
             if (!useMomentum || calculateMomentum(ticker, currentDate, momentumDays) > -0.1) {
               shouldBuy = true;
               buyTicker = ticker;
+              if (i % 50 === 0) console.log('BUY via rankChange:', ticker);
               break;
             }
           }
         }
       } else {
         for (const ticker of Object.keys(currentRanks)) {
-          if (prevRanks[ticker] !== undefined && prevRanks[ticker] <= buyRank && currentRanks[ticker] === buyRank) {
-            if (!useMomentum || calculateMomentum(ticker, currentDate, momentumDays) > -0.1) {
-              shouldBuy = true;
-              buyTicker = ticker;
-              break;
+          if (prevRanks[ticker] === undefined || prevRanks[ticker] > buyRank) {
+            if (currentRanks[ticker] <= buyRank) {
+              if (!useMomentum || calculateMomentum(ticker, currentDate, momentumDays) > -0.1) {
+                shouldBuy = true;
+                buyTicker = ticker;
+                if (i % 50 === 0) console.log('BUY:', ticker, 'prevRank:', prevRanks[ticker], 'currentRank:', currentRanks[ticker]);
+                break;
+              }
             }
           }
         }
