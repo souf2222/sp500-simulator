@@ -225,15 +225,15 @@ const simulateStrategy = (allStocks, sp500Data, buyRank, sellRank, useRankChange
           }
         }
       } else {
+        // Simple strategy: buy any top-N stock
         for (const ticker of Object.keys(currentRanks)) {
-          if (prevRanks[ticker] === undefined || prevRanks[ticker] > buyRank) {
-            if (currentRanks[ticker] <= buyRank) {
-              if (!useMomentum || calculateMomentum(ticker, currentDate, momentumDays) > -0.1) {
-                shouldBuy = true;
-                buyTicker = ticker;
-                if (i % 50 === 0) console.log('BUY:', ticker, 'prevRank:', prevRanks[ticker], 'currentRank:', currentRanks[ticker]);
-                break;
-              }
+          if (currentRanks[ticker] <= buyRank) {
+            const momentum = useMomentum ? calculateMomentum(ticker, currentDate, momentumDays) : 0;
+            if (momentum > -0.1) {
+              shouldBuy = true;
+              buyTicker = ticker;
+              if (i % 50 === 0) console.log('BUY:', ticker, 'rank:', currentRanks[ticker], 'momentum:', momentum);
+              break;
             }
           }
         }
