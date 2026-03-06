@@ -266,6 +266,7 @@ const simulateStrategy = (allStocks, sp500Data, buyRank, sellRank, useRankChange
       
       if (rankCondition && daysSinceBuy >= minHoldDays) {
         shouldSell = true;
+        if (i < 20) console.log('SELL:', positionTicker, 'daysSinceBuy:', daysSinceBuy, 'rank:', currentRank, 'minHold:', minHoldDays);
       }
     }
 
