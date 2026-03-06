@@ -240,6 +240,22 @@ const simulateStrategy = (allStocks, sp500Data, buyRank, sellRank, useRankChange
       }
     }
 
+    // Force first buy for testing
+    if (i === 0 && !inPosition && currentDayData.length > 0) {
+      const topStock = currentDayData.sort((a, b) => (b.marketCap || b.close) - (a.marketCap || a.close))[0];
+      if (topStock) {
+        console.log('FORCE BUY:', topStock.ticker, 'price:', topStock.close);
+        shares = cash / topStock.close;
+        buyPrice = topStock.close;
+        buyDate = currentDate;
+        buyDayIndex = i;
+        highestPrice = buyPrice;
+        positionTicker = topStock.ticker;
+        cash = 0;
+        inPosition = true;
+      }
+    }
+
     let shouldSell = false;
     if (inPosition && currentRanks[positionTicker] !== undefined) {
       const daysSinceBuy = i - buyDayIndex;
